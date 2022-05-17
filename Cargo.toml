@@ -1,5 +1,5 @@
 [package]
-name = "extract_ebub_inkbox"
+name = "epubtool"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,3 +10,6 @@ epub = "1.2.2"
 env_logger = "0.9.0"
 log = "0.4.0"
 tinyjson = "2"
+
+[profile.release]
+strip="debuginfo"

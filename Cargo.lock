@@ -109,7 +109,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "extract_ebub_inkbox"
+name = "epubtool"
 version = "0.1.0"
 dependencies = [
  "env_logger",
