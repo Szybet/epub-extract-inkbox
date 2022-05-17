@@ -20,57 +20,55 @@ fn main() {
     debug!("Starting");
 
     let args: Vec<String> = env::args().collect();
+    let args_len = env::args().len();
     debug!("CLI arguments are: {:?}", args);
-    if &args[1] == "--help" || &args[1] == "help" {
-        println!("First argument path to the epub, second is path and name to json file, and the second for the epub cover. Set RUST_LOG=debug to get debug output");
+    if &args[1] == "--help" || &args[1] == "help" || args_len < 1 {
+        println!("First argument: Path to book | Second: Path to extracted ePUB cover (optional). Set RUST_LOG=debug to get debug output.");
         process::exit(1);
     }
-    debug!(
-        "arguments are: 1: {}, 2: {}, 3: {}",
-        &args[1], &args[2], &args[3]
-    );
+
     let epub_file = &args[1];
-    let json_path = &args[2];
-    let cover_path = &args[3];
 
     let mut doc = EpubDoc::new(epub_file).unwrap();
 
-    // The whole hashmap
+    // Whole hashmap
     let metadata_all = doc.metadata.clone();
-    debug!("Whole metadata of this epub: {:?}", metadata_all);
+    debug!("Whole metadata of ePUB: {:?}", metadata_all);
 
-    // title:
+    // Title:
     let title = doc.mdata("title").unwrap();
-    debug!("tittle is: {}", title);
+    debug!("Title is: {}", title);
 
-    // cover:
-    let cover_data = doc.get_cover().unwrap();
-    let f = fs::File::create(cover_path);
-    let mut f = f.unwrap();
-    let resp = f.write_all(&cover_data).unwrap();
-    debug!("cover done");
+    // Cover:
+    if args_len > 2 {
+        let cover_path = &args[2];
+        let cover_data = doc.get_cover().unwrap();
+        let f = fs::File::create(cover_path);
+        let mut f = f.unwrap();
+        let resp = f.write_all(&cover_data).unwrap();
+        debug!("Cover extraction done");
+    }
+    else {
+        debug!("Not extracting book cover since no path was provided");
+    }
 
-    // Publish date
+    // Publishing date
     let publish_date = doc.mdata("date").unwrap();
-    debug!("publish date: {:?}", publish_date);
+    debug!("Publishing date: {:?}", publish_date);
 
     // Author
     let author = doc.mdata("creator").unwrap();
-    debug!("author: {:?}", author);
+    debug!("Author: {:?}", author);
 
-    let mut json = r#"{
+    let json = r#"{
     "author": "author_replace",
     "title": "title_replace",
     "date": "date_replace",
-    "cover_path": "cover_replace"
 }"#;
     let new_json: String = json
         .replace("author_replace", &author)
         .replace("title_replace", &title)
-        .replace("date_replace", &publish_date)
-        .replace("cover_replace", &cover_path);
+        .replace("date_replace", &publish_date);
 
-    let f = fs::File::create(json_path);
-    let mut f = f.unwrap();
-    writeln!(&mut f, "{}", new_json);
+    println!("{}", new_json);
 }
