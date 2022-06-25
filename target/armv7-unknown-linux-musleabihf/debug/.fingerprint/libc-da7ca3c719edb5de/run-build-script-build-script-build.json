@@ -1,0 +1,1 @@
+{"rustc":6064785002308032717,"features":"","target":0,"profile":0,"path":0,"deps":[[5071438224780403860,"build_script_build",false,7960171539293124203]],"local":[{"RerunIfChanged":{"output":"armv7-unknown-linux-musleabihf/debug/build/libc-da7ca3c719edb5de/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}

@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/target/armv7-unknown-linux-musleabihf/release/build/typenum-16bea23742fe1141/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/target/armv7-unknown-linux-musleabihf/release/build/typenum-16bea23742fe1141/out/op.rs

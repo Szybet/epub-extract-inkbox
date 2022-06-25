@@ -10,62 +10,77 @@ use std::fs;
 use std::io::Write;
 
 use std::env;
+use std::mem::replace;
 use std::process;
+
+use sha256::digest_file;
+use std::path::Path;
 
 fn main() {
     // Set RUST_LOG=debug to get debug output
     //env_logger::init();
     //debug!("Starting");
 
-    let args: Vec<String> = env::args().collect();
-    let args_len = env::args().len();
+    let mut args: Vec<String> = env::args().collect();
+    args.remove(0);
+
+    let arg_lenght = args.len();
     //debug!("CLI arguments are: {:?}", args);
-    if &args[1] == "--help" || &args[1] == "help" || args_len < 1 {
-        println!("First argument: Path to book | Second: Path to extracted ePUB cover (optional). Set RUST_LOG=debug to get debug output.");
-        process::exit(1);
-    }
 
-    let epub_file = &args[1];
+    let mut mainString = String::from("[");
+    let mainPath = String::from("/data/onboard/.thumbnails/");
 
-    let mut doc = EpubDoc::new(epub_file).unwrap();
+    let mut count: usize = 0;
+    for epub_file in args {
+        count = count + 1;
+        let mut doc = EpubDoc::new(&epub_file).unwrap();
+        // Whole hashmap
+        //let metadata_all = doc.metadata.clone();
+        //debug!("Whole metadata of ePUB: {:?}", metadata_all);
+        // Title:
+        let title = doc.mdata("title").unwrap();
+        //debug!("Title is: {}", title);
 
-    // Whole hashmap
-    //let metadata_all = doc.metadata.clone();
-    //debug!("Whole metadata of ePUB: {:?}", metadata_all);
+        // Cover:
 
-    // Title:
-    let title = doc.mdata("title").unwrap();
-    //debug!("Title is: {}", title);
-
-    // Cover:
-    if args_len > 2 {
-        let cover_path = &args[2];
+        let cover_path = mainPath.clone() + &digest_file(&epub_file).unwrap().to_string();
         let cover_data = doc.get_cover().unwrap();
-        let f = fs::File::create(cover_path);
+        let f = fs::File::create(cover_path.clone());
         let mut f = f.unwrap();
-        let resp = f.write_all(&cover_data).unwrap();
+        f.write_all(&cover_data).unwrap();
         //debug!("Cover extraction done");
-    } else {
-        //debug!("Not extracting book cover since no path was provided");
+
+        // Publishing date
+        let publish_date = doc.mdata("date").unwrap();
+        //debug!("Publishing date: {:?}", publish_date);
+
+        // Author
+        let author = doc.mdata("creator").unwrap();
+        //debug!("Author: {:?}", author);
+
+        let json = r#"{
+            "path": "path_replace",
+            "author": "author_replace",
+            "title": "title_replace",
+            "date": "date_replace"
+        }"#;
+
+        let mut new_json: String = json
+            .replace("path_replace", &cover_path)
+            .replace("author_replace", &author)
+            .replace("title_replace", &title)
+            .replace("date_replace", &publish_date)
+            .replace(" ", "");
+
+        if arg_lenght != count {
+            new_json.push_str(",");
+        }
+
+        mainString.push_str(&new_json);
     }
 
-    // Publishing date
-    let publish_date = doc.mdata("date").unwrap();
-    //debug!("Publishing date: {:?}", publish_date);
 
-    // Author
-    let author = doc.mdata("creator").unwrap();
-    //debug!("Author: {:?}", author);
+    mainString.push_str("]");
 
-    let json = r#"{
-    "author": "author_replace",
-    "title": "title_replace",
-    "date": "date_replace",
-}"#;
-    let new_json: String = json
-        .replace("author_replace", &author)
-        .replace("title_replace", &title)
-        .replace("date_replace", &publish_date);
-
-    println!("{}", new_json);
+    print!("{}", mainString);
 }
