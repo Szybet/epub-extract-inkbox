@@ -1,12 +1,13 @@
 [package]
 name = "epubtool"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 epub = "1.2.2"
+sha256 = "1.0.3"
 #//env_logger = "0.9.0"
 #log = "0.4.0"
 #tinyjson = "2"

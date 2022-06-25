@@ -1,71 +1,74 @@
-/*
-author ---
-pub date ---
-cover page location ---
-book name ---
-*/
-
 use epub::doc::EpubDoc;
 use std::fs;
 use std::io::Write;
 
 use std::env;
-use std::process;
+use sha256::digest_file;
 
 fn main() {
-    // Set RUST_LOG=debug to get debug output
-    //env_logger::init();
-    //debug!("Starting");
+    let mut extract_cover = true;
+    let mut args: Vec<String> = env::args().collect();
 
-    let args: Vec<String> = env::args().collect();
-    let args_len = env::args().len();
-    //debug!("CLI arguments are: {:?}", args);
-    if &args[1] == "--help" || &args[1] == "help" || args_len < 1 {
-        println!("First argument: Path to book | Second: Path to extracted ePUB cover (optional). Set RUST_LOG=debug to get debug output.");
-        process::exit(1);
+    match env::var("EXTRACT_COVER") {
+        Ok(_v) => extract_cover = true,
+        Err(_e) => extract_cover = false
     }
 
-    let epub_file = &args[1];
+    args.remove(0);
 
-    let mut doc = EpubDoc::new(epub_file).unwrap();
+    let arg_length = args.len();
 
-    // Whole hashmap
-    //let metadata_all = doc.metadata.clone();
-    //debug!("Whole metadata of ePUB: {:?}", metadata_all);
+    let mut main_string = String::from("[");
 
-    // Title:
-    let title = doc.mdata("title").unwrap();
-    //debug!("Title is: {}", title);
+    let thumbnails_path = "/data/onboard/.thumbnails/";
+    std::fs::create_dir_all(thumbnails_path);
+    let main_path = String::from(thumbnails_path);
 
-    // Cover:
-    if args_len > 2 {
-        let cover_path = &args[2];
-        let cover_data = doc.get_cover().unwrap();
-        let f = fs::File::create(cover_path);
-        let mut f = f.unwrap();
-        let resp = f.write_all(&cover_data).unwrap();
-        //debug!("Cover extraction done");
-    } else {
-        //debug!("Not extracting book cover since no path was provided");
+    let mut count: usize = 0;
+    for epub_file in args {
+        count = count + 1;
+        let mut doc = EpubDoc::new(&epub_file).unwrap();
+
+        // Title
+        let title = doc.mdata("title").unwrap();
+
+        // Cover
+        let cover_path = main_path.clone() + &digest_file(&epub_file).unwrap().to_string();
+        if extract_cover == true {
+            let cover_data = doc.get_cover().unwrap();
+            let f = fs::File::create(cover_path.clone());
+            let mut f = f.unwrap();
+            f.write_all(&cover_data).unwrap();
+        }
+
+        // Publication date
+        let publication_date = doc.mdata("date").unwrap();
+
+        // Author
+        let author = doc.mdata("creator").unwrap();
+
+        let json = r#"{
+            "BookID": "book_id_replace",
+            "BookPath": "book_path_replace",
+            "CoverPath": "cover_path_replace",
+            "Author": "author_replace",
+            "Title": "title_replace",
+            "PublicationDate": "publication_date_replace"
+        }"#;
+
+        let mut new_json: String = json
+            .replace("book_id_replace", &count.to_string())
+            .replace("book_path_replace", &epub_file)
+            .replace("cover_path_replace", &cover_path)
+            .replace("author_replace", &author)
+            .replace("title_replace", &title)
+            .replace("publication_date_replace", &publication_date);
+
+        if arg_length != count {
+            new_json.push_str(",");
+        }
+        main_string.push_str(&new_json);
     }
-
-    // Publishing date
-    let publish_date = doc.mdata("date").unwrap();
-    //debug!("Publishing date: {:?}", publish_date);
-
-    // Author
-    let author = doc.mdata("creator").unwrap();
-    //debug!("Author: {:?}", author);
-
-    let json = r#"{
-    "author": "author_replace",
-    "title": "title_replace",
-    "date": "date_replace",
-}"#;
-    let new_json: String = json
-        .replace("author_replace", &author)
-        .replace("title_replace", &title)
-        .replace("date_replace", &publish_date);
-
-    println!("{}", new_json);
+    main_string.push_str("]");
+    print!("{}", main_string);
 }
