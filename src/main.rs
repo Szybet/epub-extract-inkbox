@@ -33,12 +33,17 @@ fn main() {
         let title = doc.mdata("title").unwrap();
 
         // Cover
-        let cover_path = main_path.clone() + &digest_file(&epub_file).unwrap().to_string();
+        let mut cover_path = main_path.clone() + &digest_file(&epub_file).unwrap().to_string();
         if extract_cover == true {
-            let cover_data = doc.get_cover().unwrap();
-            let f = fs::File::create(cover_path.clone());
-            let mut f = f.unwrap();
-            f.write_all(&cover_data).unwrap();
+            let cover_data = doc.get_cover();
+            if cover_data.is_ok() {
+                let f = fs::File::create(cover_path.clone());
+                let mut f = f.unwrap();
+                f.write_all(&cover_data.unwrap()).unwrap();
+            }
+            else {
+                cover_path = "".to_string();
+            }
         }
 
         // Publication date
