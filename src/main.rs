@@ -18,9 +18,11 @@ fn main() {
 
     let arg_length = args.len();
 
-    let mut main_string = String::from("[");
+    let mut main_string = String::from(r#"{
+            "database":[
+            "#);
 
-    let thumbnails_path = "/data/onboard/.thumbnails/";
+    let thumbnails_path = "/mnt/onboard/onboard/.thumbnails/";
     std::fs::create_dir_all(thumbnails_path);
     let main_path = String::from(thumbnails_path);
 
@@ -74,6 +76,6 @@ fn main() {
         }
         main_string.push_str(&new_json);
     }
-    main_string.push_str("]");
+    main_string.push_str("]}");
     print!("{}", main_string);
 }
