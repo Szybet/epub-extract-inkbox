@@ -71,7 +71,7 @@ fn main() {
         let mut new_json: String = json
             .replace("book_id_replace", &count.to_string())
             .replace("book_path_replace", &epub_file)
-            .replace("cover_path_replace", &cover_path)
+            .replace("cover_path_replace", &cover_path_converted)
             .replace("author_replace", &author)
             .replace("title_replace", &title)
             .replace("publication_date_replace", &publication_date);
