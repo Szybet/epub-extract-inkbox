@@ -11,5 +11,5 @@ cargo install cross
 ```
 build it:
 ```
-~/.cargo/bin/cross build --target armv7-unknown-linux-musleabihf
+~/.cargo/bin/cross build --release --target armv7-unknown-linux-musleabihf
 ```
