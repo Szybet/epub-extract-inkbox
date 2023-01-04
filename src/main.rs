@@ -91,7 +91,7 @@ fn main() {
             main_string.push_str(&new_json);
         } else {
             // Leave this error, its important
-            eprintln!("Failed to init epub. Its propably broken: {}", epub_file);
+            eprintln!("Critical Error: EPUBTOOL: Failed to init epub. Its propably corrupted: {}", epub_file);
         }
     }
     print!("{}", main_string);
